@@ -1,0 +1,83 @@
+Design Spec: tpt-testkit (Layer 1)
+1. Mission & Scope
+Mission: To provide a unified, opinionated, and highly automated testing, benchmarking, and fuzzing infrastructure for the 300+ crates in the TPT ecosystem. It eliminates ad-hoc testing patterns, ensures deterministic regression detection in CI, and standardizes how we validate against external industry specifications.
+Scope:
+In Scope: Golden-file testing (text, binary, float-tolerant), standardized fuzzing harnesses and corpus management, property-based testing strategies, external compatibility suite management, reproducible benchmarking with CI-friendly output, and cross-crate integration testing.
+Out of Scope: Mocking network/HTTP requests (handled by downstream crates), UI/E2E browser testing (handled by tpt-pwa tooling), and production telemetry (handled by tpt-microlog).
+2. Core Constraints & Architecture
+Zero Production Footprint: tpt-testkit must never leak into production binaries. It is strictly a [dev-dependency].
+no_std Friendly Testing: While tpt-testkit requires std to run on the host, it must provide utilities to test no_std crates (e.g., by providing alloc-backed test fixtures or host-side emulators for embedded targets).
+Deterministic & Reproducible: Benchmarks and tests must isolate environmental noise. Golden files must be byte-for-byte reproducible across Linux, macOS, and Windows.
+CI-First Design: All test and benchmark outputs must be easily parseable by CI pipelines to detect regressions automatically.
+The Dependency Map (Pure Rust Only)
+We will orchestrate the best pure-Rust testing tools rather than reinventing them:
+Golden Files: insta (The gold standard for Rust snapshot testing).
+Benchmarking: criterion (Statistically rigorous benchmarking).
+Property Testing: proptest (Advanced property-based testing, better than quickcheck for complex state machines).
+Fuzzing: cargo-fuzz (libFuzzer wrapper) and afl.rs.
+Assertions: pretty-assertions (For readable diff outputs).
+3. Core Modules & API Design
+Module A: tpt_testkit::golden (Snapshot & Golden Files)
+Standardizes how we verify complex outputs (like parsed ASTs, laid-out text, or rendered PDFs).
+Multi-Modal Snapshots: Supports exact text matches, exact binary matches (hex-encoded or base64 in JSON), and float-tolerant matches (crucial for tpt-math, tpt-color, and tpt-chemistry where floating-point non-determinism might occur).
+Environment-Driven Updates: Uses the TPT_UPDATE_GOLDEN=1 environment variable to automatically update expected files during development.
+Key Macro:
+
+// Automatically creates/updates tests/fixtures/my_test.expected.json
+tpt_assert_golden!(actual_layout, "my_test.expected.json");
+
+// For floats, uses an epsilon tolerance
+tpt_assert_golden_float!(actual_matrix, "matrix.expected.json", epsilon = 1e-6);
+
+Module B: tpt_testkit::bench (Reproducible Benchmarking)
+Wraps criterion to enforce a standard benchmarking vocabulary across all crates.
+Standardized Groups: Enforces naming conventions (e.g., parse/json/small, parse/json/large) so CI can track specific performance metrics over time.
+CI Output: Automatically generates machine-readable JSON/CSV summaries of benchmark runs, allowing CI to fail a PR if performance regresses by > 5%.
+Warm-up & Isolation: Provides utilities to pin threads and clear CPU caches before critical benchmarks to reduce variance.
+Module C: tpt_testkit::fuzz (Fuzzing Conventions)
+Standardizes how we find memory safety and logic bugs in parsers (tpt-data-parsers, tpt-doc, tpt-color).
+Shared Dictionaries: Provides pre-built fuzzing dictionaries for formats we parse often (e.g., JSON tokens, PDF keywords, Unicode scripts).
+Crash Deduplication: A CLI tool to ingest cargo-fuzz crash artifacts, minify them to the smallest failing input, and deduplicate them against known issues.
+Malformed-Input Generator: A utility to take a valid corpus file and systematically mutate it (truncation, invalid UTF-8, out-of-bounds lengths) to ensure our parsers return Result::Err gracefully instead of panicking.
+Module D: tpt_testkit::suite (Compatibility Suites)
+Manages external, industry-standard test vectors that we must conform to.
+Suite Manager: A build-script helper that downloads, caches, and verifies (via SHA-256) official test suites.
+Examples: The official Unicode Bidirectional/LineBreak test suites, the ICC profile test suite, the Apache PDFBox test corpus.
+Test Harness Generator: Automatically generates #[test] functions for every file in a downloaded suite, ensuring we don't manually maintain thousands of test cases.
+Module E: tpt_testkit::property (Property-Based Strategies)
+Provides TPT-specific proptest strategies to generate complex, valid, and invalid data.
+Examples: tpt_strategy::valid_utf8(), tpt_strategy::ieee754_special_floats() (NaN, Infinity, -0.0), tpt_strategy::malformed_pdf_stream().
+4. The Developer Workflow
+How a TPT developer uses tpt-testkit in their daily work:
+Writing a Parser: Developer writes a new parser in tpt-data-parsers.
+Property Testing: They use tpt_testkit::property to generate 10,000 random, valid JSON inputs and verify the parser never panics.
+Golden Testing: They run the parser on 50 complex, real-world JSON files. They use tpt_assert_golden! to save the parsed ASTs as JSON fixtures.
+Fuzzing: They write a 10-line tpt_testkit::fuzz harness. They run cargo fuzz run overnight.
+Benchmarking: They use tpt_testkit::bench to measure parsing speed. The CI pipeline catches a 10% regression before the PR is merged.
+5. Integration with the TPT Ecosystem
+tpt-doc & tpt-data-parsers: Heavy users of golden and fuzz. Ensures that a malformed PDF or CSV never causes a panic, and that parsing logic remains stable across versions.
+tpt-text & tpt-color: Heavy users of suite. Automatically runs the layout engine against the official Unicode test suites, and the color engine against the official ICC test profiles.
+tpt-uir & tpt-primitives: Heavy users of property. Ensures that serialization/deserialization round-trips perfectly for millions of randomly generated state combinations.
+tpt-math & tpt-chemistry: Heavy users of golden_float. Ensures that complex matrix multiplications and molecular simulations remain deterministic across different CPU architectures.
+6. Cross-Crate Regression Strategy
+With 300+ crates, a change in a foundational crate (like tpt-math) can silently break a downstream crate (like tpt-vertex).
+The Solution: tpt-testkit includes a workspace-integration feature. When run in CI, it builds a "mega-test" binary that links against the public APIs of the top 20 most critical crates and runs a smoke-test suite. If tpt-math changes a floating-point behavior that breaks tpt-vertex's rendering, this integration test catches it immediately.
+7. Roadmap & Milestones
+Phase 1: The Golden Standard (Weeks 1-2)
+Wrap insta and implement tpt_assert_golden! with float-tolerance support.
+Establish the tests/fixtures/ directory convention across all existing repos.
+Milestone: All existing parser crates have golden-file coverage.
+Phase 2: Benchmarks & CI (Weeks 3-4)
+Wrap criterion and implement the CI-friendly JSON output.
+Write the CI script that parses benchmark output and fails PRs on >5% regression.
+Milestone: Performance regressions are automatically blocked in CI.
+Phase 3: Fuzzing & Suites (Weeks 5-7)
+Implement the suite manager to download and cache Unicode/ICC test vectors.
+Standardize the cargo-fuzz harness templates.
+Milestone: All format parsers (tpt-doc, tpt-data-parsers) are fuzzing continuously in CI.
+Phase 4: Property & Integration (Weeks 8-9)
+Build the TPT-specific proptest strategies.
+Implement the cross-crate workspace integration smoke-tests.
+Publish v1.0.0.
+Architect's Note
+The biggest cultural shift with tpt-testkit will be enforcing the Golden File workflow. Developers often write brittle assert_eq!(actual, expected) checks by hand, which break easily and are hard to read. By forcing the use of insta-backed golden files, the "expected" output lives in a readable JSON/text file. When a test fails, the developer doesn't read a stack trace; they just run diff on the golden file to see exactly what changed in the output. It transforms debugging from a chore into a visual inspection.

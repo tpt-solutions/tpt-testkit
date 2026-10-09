@@ -1,0 +1,16 @@
+target/
+Cargo.lock.bak
+
+# Fuzzing
+fuzz/artifacts/
+fuzz/target/
+
+# Snapshots pending review
+*.snap.new
+*.pending-snap
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

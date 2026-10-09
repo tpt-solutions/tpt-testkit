@@ -1,0 +1,23 @@
+[package]
+name = "tpt-testkit"
+description = "Unified testing, benchmarking and fuzzing infrastructure for the TPT ecosystem (dev-dependency only)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[features]
+default = ["golden"]
+golden = []
+bench = []
+fuzz = []
+suite = []
+property = []
+# Isolated platform code (thread pinning, cache clearing); the only place unsafe is permitted.
+platform-isolation = []
+workspace-integration = []
+
+[lints]
+workspace = true
