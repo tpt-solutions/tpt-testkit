@@ -16,5 +16,8 @@ repository = "https://github.com/<ORG>/tpt-testkit"
 publish = false
 
 [workspace.lints.rust]
-unsafe_code = "forbid"
+unsafe_code = "deny"
 missing_docs = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }

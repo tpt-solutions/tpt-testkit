@@ -1,0 +1,86 @@
+name: Benchmarks
+
+on:
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+permissions:
+  contents: read
+
+jobs:
+  bench:
+    name: compare against base
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      # Both sides run on this runner so hardware noise is shared. The baseline is the PR's base
+      # commit rather than a stored file, so it never goes stale.
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          path: head
+
+      - name: Checkout base commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+
+      - uses: dtolnay/rust-toolchain@1.97.0
+
+      - name: Build the CLI from the PR head
+        working-directory: head
+        run: cargo build --release -p tpt-testkit-cli
+
+      - name: Benchmark base
+        id: base
+        continue-on-error: true
+        working-directory: base
+        run: |
+          cargo bench -p tpt-testkit --features bench --bench self_check
+          ../head/target/release/tpt-testkit-cli bench-summarize \
+            --criterion-dir target/criterion --out target/tpt-bench/summary.json
+
+      - name: Benchmark head
+        working-directory: head
+        run: |
+          cargo bench -p tpt-testkit --features bench --bench self_check
+          target/release/tpt-testkit-cli bench-summarize \
+            --criterion-dir target/criterion --out target/tpt-bench/summary.json \
+            --csv target/tpt-bench/summary.csv
+
+      # A regression makes this step exit 1, which fails the job. The comment step still runs.
+      - name: Compare
+        if: steps.base.outcome == 'success'
+        working-directory: head
+        run: |
+          target/release/tpt-testkit-cli bench-compare \
+            --baseline ../base/target/tpt-bench/summary.json \
+            --current target/tpt-bench/summary.json \
+            --format markdown > ../report.md
+          cat ../report.md
+
+      - name: Note missing baseline
+        if: steps.base.outcome != 'success'
+        run: |
+          echo "The base commit has no benchmark summary; comparison skipped." > report.md
+          cat report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Post comment
+        # Forks get a read-only token, so only same-repository PRs can comment.
+        if: >-
+          always() && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          # Nothing to report when the head benchmark itself failed.
+          [ -f report.md ] || exit 0
+          {
+            echo "## Benchmark comparison"
+            echo
+            cat report.md
+          } > comment.md
+          gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --body-file comment.md

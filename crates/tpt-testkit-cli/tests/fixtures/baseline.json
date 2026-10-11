@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "benchmarks": [
+    { "name": "golden/text/large", "mean_ns": 1000.0, "std_dev_ns": 10.0 },
+    { "name": "golden/text/small", "mean_ns": 100.0, "std_dev_ns": 1.0 },
+    { "name": "parse/csv/small", "mean_ns": 40.0, "std_dev_ns": 0.5 },
+    { "name": "parse/json/large", "mean_ns": 500.0, "std_dev_ns": 5.0 },
+    { "name": "parse/json/small", "mean_ns": 50.0, "std_dev_ns": 0.0 }
+  ]
+}
