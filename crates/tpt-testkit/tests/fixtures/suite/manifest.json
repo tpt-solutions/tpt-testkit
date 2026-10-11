@@ -1,0 +1,8 @@
+{
+  "name": "fixture",
+  "version": "1.0.0",
+  "license": "MIT",
+  "files": [
+    { "path": "hello.txt", "url": "https://example.invalid/fixture/hello.txt", "sha256": "224ef815d6f6859e1592151b4483cf24ea9a172c7f797a29cf059dc0cfc8d819" }
+  ]
+}

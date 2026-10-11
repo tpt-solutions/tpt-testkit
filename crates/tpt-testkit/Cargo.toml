@@ -13,19 +13,27 @@ default = ["golden"]
 golden = ["dep:similar", "dep:serde_json"]
 bench = ["dep:criterion"]
 fuzz = []
-suite = []
-property = []
+suite = ["dep:sha2", "dep:serde", "dep:serde_json", "dep:tpt-testkit-macros"]
+property = ["dep:proptest", "dep:serde_json"]
 # Isolated platform code (thread pinning, cache clearing); the only place unsafe is permitted.
 platform-isolation = []
 workspace-integration = []
+proptest = ["dep:proptest"]
+sha2 = ["dep:sha2"]
+serde = ["dep:serde"]
+tpt-testkit-macros = ["dep:tpt-testkit-macros"]
 
 [lints]
 workspace = true
 
 [dependencies]
 criterion = { version = "0.7", optional = true }
+proptest = { version = "1", optional = true }
+serde = { version = "1", features = ["derive"], optional = true }
 serde_json = { version = "1", optional = true }
+sha2 = { version = "0.10", optional = true }
 similar = { version = "2", optional = true }
+tpt-testkit-macros = { version = "0.1.0", path = "../tpt-testkit-macros", optional = true }
 
 [[bench]]
 name = "self_check"

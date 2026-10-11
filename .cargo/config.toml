@@ -1,0 +1,3 @@
+# Point the suite cache at the committed fixture so `tests/suite_macro.rs` runs offline.
+[env]
+TPT_TESTKIT_CACHE = { value = "crates/tpt-testkit/tests/fixtures/suite-cache", relative = true }

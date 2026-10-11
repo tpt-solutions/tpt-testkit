@@ -43,37 +43,37 @@ Open item: GitHub org name for `repository` URLs and sibling-crate git deps (cur
 
 ## Phase 3 — Fuzz and Suites (weeks 5–7)
 ### Suite manager (Module D)
-- [ ] build.rs helper: download, cache (shared cache dir), verify SHA-256, offline mode
-- [ ] Manifest format for suites (URL, hash, version)
-- [ ] Proc-macro test generator: one `#[test]` per file in a suite
+- [ ] build.rs helper: download, cache (shared cache dir), verify SHA-256, offline mode — *cache, SHA-256 verification and offline mode are done in `suite`; the download transport and `build.rs` wiring are pending (see docs/suite.md)*
+- [x] Manifest format for suites (URL, hash, version) — `docs/suite.md`
+- [x] Proc-macro test generator: one `#[test]` per file in a suite — `tpt_suite_tests!`
 - [ ] Add suites: Unicode BiDi, Unicode LineBreak, ICC profiles, PDFBox corpus
-- [ ] Decide licensing/redistribution handling for downloaded corpora
+- [x] Decide licensing/redistribution handling for downloaded corpora — *default chosen: corpora are never committed or redistributed; manifests record the license and files are fetched into the local cache. Confirm.*
 ### Fuzz (Module C)
-- [ ] Harness API (`fuzz_target`-style, 10-line harness)
+- [ ] Harness API (`fuzz_target`-style, 10-line harness) — *in-process `check_no_panic` / `check_corpus_dir` exist; a cargo-fuzz wrapper is not built*
 - [ ] Pure-Rust in-process fuzz engine: mutators, corpus, scheduling
 - [ ] Sancov coverage feedback (nightly only for instrumentation; runs on Windows/Linux/macOS)
 - [ ] Corpus management and minimization
-- [ ] Crash artifacts: save, replay, minify to smallest failing input
+- [ ] Crash artifacts: save, replay, minify to smallest failing input — *save (content-hash names) and replay are done; minimization is not*
 - [ ] CLI: crash dedup against known issues (stack/signature hashing)
-- [ ] Shared dictionaries: JSON tokens, PDF keywords, Unicode scripts, CSV
-- [ ] Malformed-input generator: truncation, invalid UTF-8, out-of-bounds lengths, etc.
+- [x] Shared dictionaries: JSON tokens, PDF keywords, Unicode scripts, CSV
+- [x] Malformed-input generator: truncation, invalid UTF-8, out-of-bounds lengths, etc.
 - [ ] Harness templates for crates
 - [ ] GitHub Actions: continuous / scheduled fuzzing with corpus caching
 - [ ] Milestone: tpt-doc and tpt-data-parsers fuzzing continuously in CI
 
 ## Phase 4 — Property and Integration (weeks 8–9)
-- [ ] `strategy::valid_utf8()`
-- [ ] `strategy::ieee754_special_floats()`
-- [ ] `strategy::malformed_pdf_stream()`
-- [ ] Valid + invalid generators for JSON, CSV, PDF
-- [ ] Round-trip helper for serialization (tpt-uir, tpt-primitives)
+- [x] `strategy::valid_utf8()` — `property::valid_utf8`
+- [x] `strategy::ieee754_special_floats()` — `property::ieee754_special_floats`
+- [x] `strategy::malformed_pdf_stream()` — `property::malformed_pdf_stream`
+- [x] Valid + invalid generators for JSON, CSV, PDF
+- [x] Round-trip helper for serialization (tpt-uir, tpt-primitives) — `property::check_round_trip`
 - [ ] `no_std` support utilities: alloc-backed fixtures, host-side emulators
 - [ ] Config file listing top-20 critical crates (git URL, rev/tag)
 - [ ] `workspace-integration` mega-test binary + smoke suite
 - [ ] CI job running the mega-test against pinned sibling revs
-- [ ] Full docs (rustdoc, examples per module), CHANGELOG
+- [ ] Full docs (rustdoc, examples per module), CHANGELOG — *CHANGELOG started; rustdoc examples for golden/bench/fuzz/property are incomplete*
 - [ ] Tag and release v1.0.0 (git tag; GitHub release)
 
 ## Ongoing
 - [ ] Keep every output CI-parseable (JSON)
-- [ ] Verify zero production footprint on each release
+- [ ] Verify zero production footprint on each release — *`scripts/check-prod-footprint.sh` passes on the current tree*

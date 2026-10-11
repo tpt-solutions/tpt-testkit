@@ -4,8 +4,14 @@
 
 #[cfg(feature = "bench")]
 pub mod bench;
+#[cfg(feature = "fuzz")]
+pub mod fuzz;
 #[cfg(feature = "golden")]
 pub mod golden;
 #[cfg(feature = "platform-isolation")]
 #[allow(unsafe_code)]
 pub mod platform;
+#[cfg(feature = "property")]
+pub mod property;
+#[cfg(feature = "suite")]
+pub mod suite;
