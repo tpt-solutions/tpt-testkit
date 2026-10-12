@@ -830,10 +830,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tpt-testkit-integration"
-version = "0.1.0"
-
-[[package]]
 name = "tpt-testkit-macros"
 version = "0.1.0"
 dependencies = [

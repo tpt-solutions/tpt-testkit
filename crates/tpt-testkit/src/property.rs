@@ -35,7 +35,7 @@ const TRICKY_CHARS: &[char] = &[
     '\n',
 ];
 
-/// Valid UTF-8 strings. Mostly arbitrary Unicode, with a bias towards [`TRICKY_CHARS`].
+/// Valid UTF-8 strings. Mostly arbitrary Unicode, with a bias towards `TRICKY_CHARS`.
 pub fn valid_utf8() -> impl Strategy<Value = String> {
     prop_oneof![
         3 => any::<String>(),
@@ -146,6 +146,16 @@ pub fn malformed_pdf_stream() -> impl Strategy<Value = Vec<u8>> {
 /// # Errors
 ///
 /// Returns `Err` when decoding fails or when the decoded value differs from the original.
+/// # Examples
+/// ```
+/// use tpt_testkit::property::check_round_trip;
+///
+/// let ok = check_round_trip(&42_u8, |v| vec![*v], |b| Ok::<u8, String>(b[0]));
+/// assert_eq!(ok, Ok(()));
+///
+/// let bad = check_round_trip(&1_u8, |v| vec![*v], |_| Ok::<u8, String>(2));
+/// assert!(bad.is_err());
+/// ```
 pub fn check_round_trip<T, E, D, Er>(value: &T, encode: E, decode: D) -> Result<(), String>
 where
     T: PartialEq + std::fmt::Debug,

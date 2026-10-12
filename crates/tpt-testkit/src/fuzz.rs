@@ -21,6 +21,18 @@ use std::io::{self, Write};
 use std::panic;
 use std::path::{Path, PathBuf};
 
+mod engine;
+mod minimize;
+mod report;
+
+pub use engine::{Engine, MAX_INPUT_LEN, Rng, mutate, read_corpus, save_corpus};
+pub use minimize::{
+    CrashGroup, dedup, minimize, minimize_corpus, minimize_crash, signature, unknown_groups,
+};
+pub use report::{
+    CrashRecord, CrashReport, REPORT_SCHEMA, from_hex, read_report, to_hex, write_report,
+};
+
 /// Tokens that appear in JSON. Feed to a fuzzer with [`write_dictionary`].
 pub const JSON_TOKENS: &[&[u8]] = &[
     b"{", b"}", b"[", b"]", b":", b",", b"\"", b"\\", b"true", b"false", b"null", b"\\u0000",

@@ -8,6 +8,8 @@ pub mod bench;
 pub mod fuzz;
 #[cfg(feature = "golden")]
 pub mod golden;
+#[cfg(feature = "nostd")]
+pub mod nostd;
 #[cfg(feature = "platform-isolation")]
 #[allow(unsafe_code)]
 pub mod platform;

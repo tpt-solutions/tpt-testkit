@@ -1,0 +1,12 @@
+{
+  "name": "unicode-bidi",
+  "version": "17.0.0",
+  "license": "Unicode-3.0",
+  "files": [
+    {
+      "path": "BidiTest.txt",
+      "url": "https://www.unicode.org/Public/17.0.0/ucd/BidiTest.txt",
+      "sha256": "888bdfc8090652272d1f859cdb00ae659e2dc6c26740be61ef1d03998a687620"
+    }
+  ]
+}

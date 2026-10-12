@@ -55,6 +55,13 @@ impl std::error::Error for NameError {}
 /// # Errors
 ///
 /// Returns [`NameError`] describing the first problem found.
+/// # Examples
+/// ```
+/// use tpt_testkit::bench::validate_name;
+///
+/// assert!(validate_name("parse/json/small").is_ok());
+/// assert!(validate_name("parse/json").is_err());
+/// ```
 pub fn validate_name(name: &str) -> Result<(), NameError> {
     let segments: Vec<&str> = name.split('/').collect();
     if segments.len() != 3 {

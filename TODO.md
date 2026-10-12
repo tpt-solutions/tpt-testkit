@@ -2,14 +2,14 @@
 
 Decisions locked in: Cargo workspace · edition 2024 / MSRV 1.97 · MIT OR Apache-2.0 · GitHub Actions · GitHub-only distribution (git deps) · own golden fixture I/O (insta/similar for diffs only) · pure-Rust fuzz engine with sancov feedback · `unsafe` forbidden except in isolated `platform-isolation` feature.
 
-Open item: GitHub org name for `repository` URLs and sibling-crate git deps (currently `<ORG>` placeholder).
+Org: `tpt-solutions` (repository URLs and sibling-crate git deps).
 
 ## Phase 0 — Scaffold
 - [x] Workspace `Cargo.toml` (resolver 3, shared package metadata, lints)
-- [x] Crates: `tpt-testkit`, `tpt-testkit-macros`, `tpt-testkit-cli`, `tpt-testkit-integration`
-- [x] Feature flags: golden, bench, fuzz, suite, property, platform-isolation, workspace-integration
+- [x] Crates: `tpt-testkit`, `tpt-testkit-macros`, `tpt-testkit-cli`
+- [x] Feature flags: golden, bench, fuzz, suite, property, platform-isolation
 - [x] `cargo check --workspace` passes
-- [ ] Fill in `<ORG>` once known
+- [x] Fill in `<ORG>` once known — `tpt-solutions`
 - [x] Add `rust-toolchain.toml`, `rustfmt.toml`, `clippy` config, `deny.toml` (cargo-deny: pure-Rust, license check)
 - [x] CI: GitHub Actions for fmt, clippy, test on Linux/macOS/Windows
 - [x] CI check that tpt-testkit never appears in a normal (non-dev) dependency graph
@@ -43,35 +43,32 @@ Open item: GitHub org name for `repository` URLs and sibling-crate git deps (cur
 
 ## Phase 3 — Fuzz and Suites (weeks 5–7)
 ### Suite manager (Module D)
-- [ ] build.rs helper: download, cache (shared cache dir), verify SHA-256, offline mode — *cache, SHA-256 verification and offline mode are done in `suite`; the download transport and `build.rs` wiring are pending (see docs/suite.md)*
+- [x] build.rs helper: download, cache (shared cache dir), verify SHA-256, offline mode — `suite::prepare_build`, `suite::fetch_with_curl` (curl, HTTPS only)
 - [x] Manifest format for suites (URL, hash, version) — `docs/suite.md`
 - [x] Proc-macro test generator: one `#[test]` per file in a suite — `tpt_suite_tests!`
-- [ ] Add suites: Unicode BiDi, Unicode LineBreak, ICC profiles, PDFBox corpus
+- [ ] Add suites: Unicode BiDi and LineBreak and ICC test profiles are done (`suites/`); PDFBox corpus is blocked: the `pdfbox-testfiles` repo (Google Git and GitHub mirror) has no PDF files at master or in any mirror commit, so there is nothing to pin
 - [x] Decide licensing/redistribution handling for downloaded corpora — *default chosen: corpora are never committed or redistributed; manifests record the license and files are fetched into the local cache. Confirm.*
 ### Fuzz (Module C)
-- [ ] Harness API (`fuzz_target`-style, 10-line harness) — *in-process `check_no_panic` / `check_corpus_dir` exist; a cargo-fuzz wrapper is not built*
-- [ ] Pure-Rust in-process fuzz engine: mutators, corpus, scheduling
+- [x] Harness API (`fuzz_target`-style, 10-line harness) — `fuzz::Engine` plus the template in `docs/fuzz.md`; in-process, no cargo-fuzz wrapper
+- [x] Pure-Rust in-process fuzz engine: mutators, corpus, scheduling — *uniform parent scheduling; feature-driven corpus growth*
 - [ ] Sancov coverage feedback (nightly only for instrumentation; runs on Windows/Linux/macOS)
-- [ ] Corpus management and minimization
-- [ ] Crash artifacts: save, replay, minify to smallest failing input — *save (content-hash names) and replay are done; minimization is not*
-- [ ] CLI: crash dedup against known issues (stack/signature hashing)
+- [x] Corpus management and minimization — `read_corpus` / `save_corpus` / `minimize_corpus`
+- [x] Crash artifacts: save, replay, minify to smallest failing input
+- [x] CLI: crash dedup against known issues (stack/signature hashing) — `tpt-testkit-cli crash-dedup`; signatures are over panic messages, not stack hashes
 - [x] Shared dictionaries: JSON tokens, PDF keywords, Unicode scripts, CSV
 - [x] Malformed-input generator: truncation, invalid UTF-8, out-of-bounds lengths, etc.
-- [ ] Harness templates for crates
-- [ ] GitHub Actions: continuous / scheduled fuzzing with corpus caching
+- [x] Harness templates for crates — `docs/fuzz.md`
+- [x] GitHub Actions: continuous / scheduled fuzzing with corpus caching — `.github/workflows/fuzz.yml` (nightly; not yet run on GitHub)
 - [ ] Milestone: tpt-doc and tpt-data-parsers fuzzing continuously in CI
 
-## Phase 4 — Property and Integration (weeks 8–9)
+## Phase 4 — Property (weeks 8–9)
 - [x] `strategy::valid_utf8()` — `property::valid_utf8`
 - [x] `strategy::ieee754_special_floats()` — `property::ieee754_special_floats`
 - [x] `strategy::malformed_pdf_stream()` — `property::malformed_pdf_stream`
 - [x] Valid + invalid generators for JSON, CSV, PDF
 - [x] Round-trip helper for serialization (tpt-uir, tpt-primitives) — `property::check_round_trip`
-- [ ] `no_std` support utilities: alloc-backed fixtures, host-side emulators
-- [ ] Config file listing top-20 critical crates (git URL, rev/tag)
-- [ ] `workspace-integration` mega-test binary + smoke suite
-- [ ] CI job running the mega-test against pinned sibling revs
-- [ ] Full docs (rustdoc, examples per module), CHANGELOG — *CHANGELOG started; rustdoc examples for golden/bench/fuzz/property are incomplete*
+- [ ] `no_std` support utilities: alloc-backed fixtures, host-side emulators — *`nostd::Budget` (fixed-heap emulator) done; no CI check for no_std targets yet, and no real no_std downstream crate to test against*
+- [x] Full docs (rustdoc, examples per module), CHANGELOG — `cargo doc -D warnings` passes; runnable examples in bench, suite, property, fuzz, nostd; golden examples are `ignore` (need fixture files)
 - [ ] Tag and release v1.0.0 (git tag; GitHub release)
 
 ## Ongoing

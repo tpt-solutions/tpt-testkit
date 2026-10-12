@@ -12,16 +12,13 @@ publish.workspace = true
 default = ["golden"]
 golden = ["dep:similar", "dep:serde_json"]
 bench = ["dep:criterion"]
-fuzz = []
+fuzz = ["dep:serde", "dep:serde_json"]
 suite = ["dep:sha2", "dep:serde", "dep:serde_json", "dep:tpt-testkit-macros"]
 property = ["dep:proptest", "dep:serde_json"]
 # Isolated platform code (thread pinning, cache clearing); the only place unsafe is permitted.
 platform-isolation = []
-workspace-integration = []
-proptest = ["dep:proptest"]
-sha2 = ["dep:sha2"]
-serde = ["dep:serde"]
-tpt-testkit-macros = ["dep:tpt-testkit-macros"]
+# Host-side heap-budget emulation for no_std + alloc code.
+nostd = []
 
 [lints]
 workspace = true

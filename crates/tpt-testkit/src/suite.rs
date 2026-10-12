@@ -19,16 +19,17 @@
 //! handed to a test. Set `TPT_SUITE_OFFLINE=1` to forbid network access. In that mode a missing
 //! or stale file is an error rather than a download.
 //!
-//! Use [`tpt_suite_tests!`](crate::tpt_suite_tests) to generate one `#[test]` per manifest entry.
+//! Use [`tpt_suite_tests!`](tpt_suite_tests) to generate one `#[test]` per manifest entry.
 //!
-//! Network download is not wired up yet. [`ensure_file`] takes the transport as a closure, and
-//! [`no_fetch`] is the placeholder used until a transport is chosen.
+//! Downloads use the system `curl` ([`fetch_with_curl`]). [`ensure_file`] takes the fetcher as a
+//! closure, so tests can inject their own. [`prepare_build`] is the `build.rs` entry point.
 
 use std::env;
 use std::fmt;
 use std::fs;
 use std::io;
 use std::path::{Component, Path, PathBuf};
+use std::process::Command;
 
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
@@ -221,16 +222,70 @@ impl Options {
     }
 }
 
-/// Placeholder fetcher that always fails. Pass it to [`ensure_file`] until a download transport
-/// is chosen. Files must already be cached, or the offline check fails with a clear message.
+/// Downloads `url` with the system `curl`, which must be on `PATH`.
+///
+/// Only `https://` URLs are fetched, and redirects are followed only when they also stay on
+/// HTTPS. Arguments are passed directly, not through a shell. The body is returned unverified,
+/// so callers must check it against the manifest hash, as [`ensure_file`] does.
 ///
 /// # Errors
 ///
-/// Always returns `Err`.
-pub fn no_fetch(url: &str) -> Result<Vec<u8>, String> {
-    Err(format!(
-        "no download transport is configured; place the file in the cache manually ({url})"
-    ))
+/// Returns a message if the URL is not HTTPS, `curl` cannot be started, or the transfer fails.
+pub fn fetch_with_curl(url: &str) -> Result<Vec<u8>, String> {
+    if !url.starts_with("https://") {
+        return Err(format!("refusing to fetch non-HTTPS url {url}"));
+    }
+    let output = Command::new("curl")
+        .args([
+            "--fail",
+            "--silent",
+            "--show-error",
+            "--location",
+            "--max-time",
+            "600",
+            "--proto",
+            "=https",
+            "--proto-redir",
+            "=https",
+            "--tlsv1.2",
+            url,
+        ])
+        .output()
+        .map_err(|err| format!("cannot run curl: {err}"))?;
+    if output.status.success() {
+        Ok(output.stdout)
+    } else {
+        Err(String::from_utf8_lossy(&output.stderr).trim().to_owned())
+    }
+}
+
+/// Build-script helper: makes every file in a manifest available and tells Cargo when to rerun.
+///
+/// Call it from `build.rs` in a crate that depends on tpt-testkit as a `[build-dependencies]`
+/// entry. It emits `cargo:rerun-if-changed` for the manifest and for the cache and offline
+/// variables, then ensures each file with [`fetch_with_curl`]. It returns the cached paths.
+///
+/// ```ignore
+/// fn main() {
+///     tpt_testkit::suite::prepare_build(std::path::Path::new("tests/suites/unicode-bidi.json"))
+///         .expect("suite files are available");
+/// }
+/// ```
+///
+/// # Errors
+///
+/// Returns any [`SuiteError`] from reading the manifest or ensuring a file.
+pub fn prepare_build(manifest_path: &Path) -> Result<Vec<PathBuf>, SuiteError> {
+    println!("cargo:rerun-if-changed={}", manifest_path.display());
+    println!("cargo:rerun-if-env-changed=TPT_SUITE_OFFLINE");
+    println!("cargo:rerun-if-env-changed=TPT_TESTKIT_CACHE");
+    let manifest = Manifest::from_json(&fs::read_to_string(manifest_path)?)?;
+    let options = Options::from_env();
+    manifest
+        .files
+        .iter()
+        .map(|entry| ensure_file(&manifest, &entry.path, &options, fetch_with_curl))
+        .collect()
 }
 
 /// Returns the cache path for `path` inside `manifest`, downloading it first if needed.
@@ -296,6 +351,15 @@ where
 }
 
 /// Lowercase hex SHA-256 of `bytes`.
+/// # Examples
+/// ```
+/// use tpt_testkit::suite::sha256_hex;
+///
+/// assert_eq!(
+///     sha256_hex(b"abc"),
+///     "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+/// );
+/// ```
 pub fn sha256_hex(bytes: &[u8]) -> String {
     let digest = Sha256::digest(bytes);
     let mut out = String::with_capacity(digest.len() * 2);
@@ -434,7 +498,13 @@ mod tests {
         fs::create_dir_all(target.parent().unwrap()).unwrap();
         fs::write(&target, DATA).unwrap();
 
-        let got = ensure_file(&manifest, "data/a.txt", &options(&cache, true), no_fetch).unwrap();
+        let got = ensure_file(
+            &manifest,
+            "data/a.txt",
+            &options(&cache, true),
+            fetch_with_curl,
+        )
+        .unwrap();
         assert_eq!(got, target);
         fs::remove_dir_all(&cache).unwrap();
     }
@@ -493,13 +563,30 @@ mod tests {
     }
 
     #[test]
+    fn curl_fetch_refuses_plain_http() {
+        let err = fetch_with_curl("http://example.invalid/a.txt").unwrap_err();
+        assert!(err.contains("non-HTTPS"), "{err}");
+    }
+
+    #[test]
+    fn prepare_build_ensures_fixture_from_cache() {
+        let paths = prepare_build(Path::new("tests/fixtures/suite/manifest.json")).unwrap();
+        assert_eq!(paths.len(), 1);
+        assert_eq!(
+            fs::read(&paths[0]).unwrap(),
+            b"hello suite
+"
+        );
+    }
+
+    #[test]
     fn unknown_path_is_reported() {
         let manifest = Manifest::from_json(&manifest_json(&sha256_hex(DATA))).unwrap();
         let err = ensure_file(
             &manifest,
             "nope",
             &options(Path::new("unused"), true),
-            no_fetch,
+            fetch_with_curl,
         )
         .unwrap_err();
         assert!(matches!(err, SuiteError::UnknownEntry { .. }));

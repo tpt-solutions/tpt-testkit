@@ -1,0 +1,12 @@
+{
+  "name": "unicode-line-break",
+  "version": "17.0.0",
+  "license": "Unicode-3.0",
+  "files": [
+    {
+      "path": "LineBreakTest.txt",
+      "url": "https://www.unicode.org/Public/17.0.0/ucd/auxiliary/LineBreakTest.txt",
+      "sha256": "e69884e0dde6a8724873f885d68c52dc14518abf9ae4ca9e2283b8773db3b752"
+    }
+  ]
+}

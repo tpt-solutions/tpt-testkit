@@ -12,7 +12,6 @@ graph. CI enforces this with `scripts/check-prod-footprint.sh`.
 | `tpt-testkit` | Library: golden files, bench, fuzz, suite and property APIs (feature-gated). |
 | `tpt-testkit-macros` | Proc macros, e.g. per-file test generation for compatibility suites. |
 | `tpt-testkit-cli` | Command-line tool: `bench-compare`, crash deduplication, corpus tools. |
-| `tpt-testkit-integration` | Cross-crate workspace smoke tests. |
 
 ## Using it in a crate
 
@@ -20,11 +19,11 @@ Add it under `[dev-dependencies]` only:
 
 ```toml
 [dev-dependencies]
-tpt-testkit = { git = "https://github.com/<ORG>/tpt-testkit", tag = "v0.1.0" }
+tpt-testkit = { git = "https://github.com/tpt-solutions/tpt-testkit", tag = "v0.1.0" }
 ```
 
 Feature flags on `tpt-testkit`: `golden` (default), `bench`, `fuzz`, `suite`,
-`property`, `platform-isolation`, `workspace-integration`.
+`property`, `nostd`, `platform-isolation`.
 
 ## Development
 

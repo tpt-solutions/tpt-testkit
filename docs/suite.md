@@ -44,11 +44,30 @@ fn check_bidi(bytes: &[u8]) {
 This emits one `#[test]` per manifest entry, named `suite_<path>` with non-alphanumerics mapped to
 `_`. Editing the manifest triggers a rebuild, because the expansion includes it via `include_str!`.
 
-## Current limits
+## Shipped suites
 
-- **No download transport yet.** `ensure_file` takes the fetcher as a closure. The generated tests
-  use `no_fetch`, which fails with a clear message, so files must already be cached until a
-  transport is chosen.
-- **No `build.rs` helper yet.** Fetching happens at test runtime, not at build time.
+`suites/` holds the manifests for the shipped suites:
+
+- `suites/unicode-bidi.json`: Unicode 17.0.0 `BidiTest.txt` (license `Unicode-3.0`)
+- `suites/unicode-line-break.json`: Unicode 17.0.0 `LineBreakTest.txt` (license `Unicode-3.0`)
+- `suites/icc-test-profiles.json`: ICC `PRMG_RGB-sRGB_based.icc` and the `Probev2.zip` probe
+  archive from the [ICC profile registry](https://registry.color.org/profile-library/). The license
+  is `LicenseRef-ICC-Free-Use`, because the ICC publishes these profiles for free copying and
+  distribution. Consumers extract `Probev2_ICCv4.icc` from the zip themselves.
+
+Parsing the manifests is checked offline by `tests/suite_manifests.rs`. The real downloads are an
+ignored test, which you run on demand:
+
+```sh
+TPT_TESTKIT_CACHE=/some/scratch/dir cargo test -p tpt-testkit --all-features     --test suite_manifests -- --ignored
+```
+
+## Limits
+
+- **PDFBox corpus is not pinned.** The Apache `pdfbox-testfiles` repository on its Google Git host
+  and its GitHub mirror contain no PDF files at master or at any mirror commit, so there is nothing
+  to enumerate. The corpus README also says the files may not be redistributable.
+- **Corpora are not committed.** Files are fetched into the cache on first use. CI does not run the
+  download test by default.
 - **Licensing default.** Corpora are never committed or redistributed by this repository. Each
   manifest records its license, and files are fetched on demand into the local cache.

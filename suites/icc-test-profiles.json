@@ -1,0 +1,17 @@
+{
+  "name": "icc-test-profiles",
+  "version": "1",
+  "license": "LicenseRef-ICC-Free-Use",
+  "files": [
+    {
+      "path": "PRMG_RGB-sRGB_based.icc",
+      "url": "https://registry.color.org/profile-library/profiles/PRMG_RGB-sRGB_based.icc",
+      "sha256": "c61f21df337328557ad725ba051751304fd40d369f7d32a257462bc7b83aed57"
+    },
+    {
+      "path": "Probev2.zip",
+      "url": "https://registry.color.org/profile-library/profiles/Probev2.zip",
+      "sha256": "e8d4467ec4ae2291f14a73b3daf953018f2dfcd6ddfd90db62108c61df84728a"
+    }
+  ]
+}

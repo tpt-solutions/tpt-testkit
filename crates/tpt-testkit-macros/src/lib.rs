@@ -111,7 +111,7 @@ fn expand(args: &SuiteTests) -> syn::Result<proc_macro2::TokenStream> {
                     &manifest,
                     #path,
                     &options,
-                    ::tpt_testkit::suite::no_fetch,
+                    ::tpt_testkit::suite::fetch_with_curl,
                 )
                 .unwrap_or_else(|err| panic!("{err}"));
                 let bytes = ::std::fs::read(&file).expect("cached suite file is readable");

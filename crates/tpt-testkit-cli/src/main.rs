@@ -5,12 +5,15 @@
 //! tpt-testkit-cli bench-compare --baseline <summary.json> --current <summary.json>
 //!                 [--threshold-pct <n>] [--noise-sigmas <n>] [--format text|markdown|json]
 //!                 [--strict]
+//! tpt-testkit-cli crash-dedup --report <report.json> [--known <signatures.txt>]
+//!                 [--format text|json]
 //! ```
 //!
-//! Exit codes: `0` success, `1` regression (or missing benchmark with `--strict`), `2` usage or
-//! I/O error.
+//! Exit codes: `0` success, `1` regression (or missing benchmark with `--strict`; or a crash
+//! group not in `--known` for `crash-dedup`), `2` usage or I/O error.
 
 mod compare;
+mod crash;
 mod summary;
 
 use std::fs;
@@ -24,7 +27,9 @@ const USAGE: &str = "usage:
   tpt-testkit-cli bench-summarize --criterion-dir <dir> --out <summary.json> [--csv <file>]
   tpt-testkit-cli bench-compare --baseline <summary.json> --current <summary.json>
                   [--threshold-pct <n>] [--noise-sigmas <n>] [--format text|markdown|json]
-                  [--strict]";
+                  [--strict]
+  tpt-testkit-cli crash-dedup --report <report.json> [--known <signatures.txt>]
+                  [--format text|json]";
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -41,6 +46,7 @@ fn run(args: &[String]) -> Result<ExitCode, String> {
     match args.first().map(String::as_str) {
         Some("bench-summarize") => summarize(&args[1..]),
         Some("bench-compare") => bench_compare(&args[1..]),
+        Some("crash-dedup") => crash_dedup(&args[1..]),
         Some("-h" | "--help") | None => {
             println!("{USAGE}");
             Ok(ExitCode::SUCCESS)
@@ -112,6 +118,27 @@ fn bench_compare(args: &[String]) -> Result<ExitCode, String> {
             report.regressions(),
             report.missing()
         );
+        return Ok(ExitCode::from(1));
+    }
+    Ok(ExitCode::SUCCESS)
+}
+
+fn crash_dedup(args: &[String]) -> Result<ExitCode, String> {
+    let report = PathBuf::from(required(args, "--report")?);
+    let known = option(args, "--known")?.map(PathBuf::from);
+    let outcome = crash::dedup(&report, known.as_deref())?;
+    let rendered = match option(args, "--format")?.as_deref().unwrap_or("text") {
+        "text" => crash::render_text(&outcome),
+        "json" => {
+            let mut s = serde_json::to_string_pretty(&outcome).map_err(|e| e.to_string())?;
+            s.push('\n');
+            s
+        }
+        other => return Err(format!("unknown --format {other:?}")),
+    };
+    print!("{rendered}");
+    if outcome.new_groups > 0 {
+        eprintln!("crash-dedup: {} new crash group(s)", outcome.new_groups);
         return Ok(ExitCode::from(1));
     }
     Ok(ExitCode::SUCCESS)
