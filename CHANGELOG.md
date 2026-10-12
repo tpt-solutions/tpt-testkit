@@ -7,7 +7,7 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 - `sancov` feature: `fuzz::sancov` edge-coverage feedback from nightly inline-8bit-counter
-  instrumentation (Linux/macOS; CI-verified only).
+  instrumentation (Linux only; CI-verified only).
 - `nostd` feature builds as `#![no_std]` (core + alloc) when enabled alone; CI checks it on
   `thumbv7em-none-eabihf`.
 - CLI: `bench-summarize --format json`.

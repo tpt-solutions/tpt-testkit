@@ -51,7 +51,7 @@ Org: `tpt-solutions` (repository URLs and sibling-crate git deps).
 ### Fuzz (Module C)
 - [x] Harness API (`fuzz_target`-style, 10-line harness) — `fuzz::Engine` plus the template in `docs/fuzz.md`; in-process, no cargo-fuzz wrapper
 - [x] Pure-Rust in-process fuzz engine: mutators, corpus, scheduling — *uniform parent scheduling; feature-driven corpus growth*
-- [x] Sancov coverage feedback (nightly only for instrumentation) — `fuzz::sancov` (feature `sancov`); *verified only by the `sancov` CI job on Linux/macOS: MSVC has no `__start___sancov_cntrs`/`__stop___sancov_cntrs` section-bound symbols, so Windows MSVC builds do not link with instrumentation (uninstrumented builds work)*
+- [x] Sancov coverage feedback (nightly only for instrumentation) — `fuzz::sancov` (feature `sancov`); *verified only by the `sancov` CI job, which runs on Linux: MSVC and Mach-O (macOS) lack the `__start___sancov_cntrs`/`__stop___sancov_cntrs` section-bound symbols, so instrumented builds do not link there (uninstrumented builds work everywhere)*
 - [x] Corpus management and minimization — `read_corpus` / `save_corpus` / `minimize_corpus`
 - [x] Crash artifacts: save, replay, minify to smallest failing input
 - [x] CLI: crash dedup against known issues (stack/signature hashing) — `tpt-testkit-cli crash-dedup`; signatures are over panic messages, not stack hashes

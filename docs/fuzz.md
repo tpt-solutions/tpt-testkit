@@ -17,8 +17,9 @@ tpt-testkit's fuzz support has two layers:
 
    Build with `RUSTFLAGS="-C passes=sancov-module -C llvm-args=-sanitizer-coverage-level=3
    -C llvm-args=-sanitizer-coverage-inline-8bit-counters"` and pass an explicit `--target` so
-   build scripts stay uninstrumented. Without the flags, `trace` returns no features. Linux and
-   macOS link; Windows MSVC does not provide the section-bound symbols the instrumentation needs.
+   build scripts stay uninstrumented. Without the flags, `trace` returns no features. Only Linux
+   links with this instrumentation: MSVC and Mach-O (macOS) do not provide the `__start_`/`__stop_`
+   section-bound symbols it needs. The `sancov` CI job covers Linux only.
 
 ## Harness template
 
