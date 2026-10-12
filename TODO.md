@@ -28,7 +28,7 @@ Org: `tpt-solutions` (repository URLs and sibling-crate git deps).
 - [x] Cross-OS CI test proving byte-for-byte reproducibility
 - [x] Unit + integration tests for every mode, including update flow
 - [x] Document `tests/fixtures/` convention; migration guide for existing repos
-- [ ] Milestone: all existing parser crates have golden coverage — *tpt-doc (hl7v2, edi, fhir, xlsx, docx, ubl) and tpt-data-parsers (all 5) done on the `add-testkit-golden-fuzz` branches; tpt-doc-pdf/layout/sign and other org parser repos (tpt-text, tpt-raster, ...) are not covered*
+- [ ] Milestone: all existing parser crates have golden coverage — *tpt-doc (hl7v2, edi, fhir, xlsx, docx, ubl) and tpt-data-parsers (all 5) done and merged; tpt-doc-pdf/layout/sign and other org parser repos (tpt-text, tpt-raster, ...) are not covered*
 
 ## Phase 2 — Bench and CI (weeks 3–4)
 - [x] Criterion wrapper with standard group naming (`area/format/size`) and name validation
@@ -59,7 +59,7 @@ Org: `tpt-solutions` (repository URLs and sibling-crate git deps).
 - [x] Malformed-input generator: truncation, invalid UTF-8, out-of-bounds lengths, etc.
 - [x] Harness templates for crates — `docs/fuzz.md`
 - [x] GitHub Actions: continuous / scheduled fuzzing with corpus caching — `.github/workflows/fuzz.yml` (nightly; not yet run on GitHub)
-- [x] Milestone: tpt-doc and tpt-data-parsers fuzzing continuously in CI — *branches `add-testkit-golden-fuzz` in both repos (`testkit/` crate + `.github/workflows/testkit.yml`, nightly corpus-cached fuzz); not pushed, and the workflows need this repo's fuzz engine pushed first*
+- [x] Milestone: tpt-doc and tpt-data-parsers fuzzing continuously in CI — *merged in both repos (`testkit/` crate + `.github/workflows/testkit.yml`, nightly corpus-cached fuzz); first CI runs were still in progress when recorded*
 
 ## Phase 4 — Property (weeks 8–9)
 - [x] `strategy::valid_utf8()` — `property::valid_utf8`
