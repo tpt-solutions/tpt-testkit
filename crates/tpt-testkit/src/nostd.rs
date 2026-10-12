@@ -11,6 +11,9 @@
 //!
 //! [`Budget`] is single-threaded (it uses `Rc`), which is enough for host unit tests.
 //!
+//! The module uses only `core` and `alloc`, so with only the `nostd` feature enabled the crate
+//! builds as `#![no_std]` and CI checks it on a bare-metal target.
+//!
 //! ```
 //! use tpt_testkit::nostd::Budget;
 //!
@@ -22,10 +25,11 @@
 //! assert_eq!(budget.used(), 0);
 //! ```
 
-use std::cell::Cell;
-use std::fmt;
-use std::ops::{Deref, DerefMut};
-use std::rc::Rc;
+use alloc::rc::Rc;
+use alloc::vec::Vec;
+use core::cell::Cell;
+use core::fmt;
+use core::ops::{Deref, DerefMut};
 
 /// A request that does not fit in the remaining budget.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -46,7 +50,7 @@ impl fmt::Display for OutOfBudget {
     }
 }
 
-impl std::error::Error for OutOfBudget {}
+impl core::error::Error for OutOfBudget {}
 
 #[derive(Debug)]
 struct Shared {
@@ -121,7 +125,7 @@ impl Budget {
             requested: usize::MAX,
             available,
         };
-        let bytes = len.checked_mul(std::mem::size_of::<T>()).ok_or(overflow)?;
+        let bytes = len.checked_mul(core::mem::size_of::<T>()).ok_or(overflow)?;
         let reservation = self.reserve(bytes)?;
 
         let mut items = Vec::new();

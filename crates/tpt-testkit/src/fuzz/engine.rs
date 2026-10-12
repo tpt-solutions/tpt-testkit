@@ -5,7 +5,8 @@
 //! error positions or branch IDs from manual instrumentation. A target that reports nothing
 //! turns the engine into plain random mutation of the seeds.
 //!
-//! Sancov edge coverage needs nightly instrumentation and is not part of this module.
+//! Sancov edge coverage needs nightly instrumentation and lives in `fuzz::sancov` (feature
+//! `sancov`); feed its features to this engine from the target.
 //!
 //! The engine is seeded, so the same seed and target give the same run on every platform.
 

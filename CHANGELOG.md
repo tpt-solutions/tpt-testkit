@@ -6,6 +6,11 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- `sancov` feature: `fuzz::sancov` edge-coverage feedback from nightly inline-8bit-counter
+  instrumentation (Linux/macOS; CI-verified only).
+- `nostd` feature builds as `#![no_std]` (core + alloc) when enabled alone; CI checks it on
+  `thumbv7em-none-eabihf`.
+- CLI: `bench-summarize --format json`.
 - `property` feature: proptest strategies `valid_utf8`, `ieee754_special_floats`, `valid_json`,
   `invalid_json`, `valid_csv`, `invalid_csv`, `valid_pdf_stream`, `malformed_pdf_stream`, and the
   `check_round_trip` helper.

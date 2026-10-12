@@ -24,6 +24,9 @@ use std::path::{Path, PathBuf};
 mod engine;
 mod minimize;
 mod report;
+#[cfg(feature = "sancov")]
+#[allow(unsafe_code)]
+pub mod sancov;
 
 pub use engine::{Engine, MAX_INPUT_LEN, Rng, mutate, read_corpus, save_corpus};
 pub use minimize::{

@@ -47,6 +47,40 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: cargo test --workspace --all-features
 
+  no-std:
+    name: no_std build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.97.0
+        with:
+          targets: thumbv7em-none-eabihf
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo check -p tpt-testkit --no-default-features --features nostd --target thumbv7em-none-eabihf
+
+  sancov:
+    name: sancov feedback (nightly)
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: macos-latest
+            target: aarch64-apple-darwin
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+      # An explicit --target keeps build scripts and proc macros uninstrumented.
+      - name: Test with instrumentation
+        env:
+          RUSTFLAGS: -C passes=sancov-module -C llvm-args=-sanitizer-coverage-level=3 -C llvm-args=-sanitizer-coverage-inline-8bit-counters
+        run: cargo test -p tpt-testkit --features sancov --test sancov --target ${{ matrix.target }} -- --nocapture
+
   footprint:
     name: no production footprint
     runs-on: ubuntu-latest

@@ -2,6 +2,22 @@
 //!
 //! Must only ever be used as a `[dev-dependency]`.
 
+// With only `nostd` enabled the crate has no std dependency, so it builds for bare-metal targets.
+#![cfg_attr(
+    not(any(
+        feature = "bench",
+        feature = "fuzz",
+        feature = "golden",
+        feature = "platform-isolation",
+        feature = "property",
+        feature = "suite"
+    )),
+    no_std
+)]
+
+#[cfg(feature = "nostd")]
+extern crate alloc;
+
 #[cfg(feature = "bench")]
 pub mod bench;
 #[cfg(feature = "fuzz")]

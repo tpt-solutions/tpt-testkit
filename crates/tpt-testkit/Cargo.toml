@@ -13,6 +13,8 @@ default = ["golden"]
 golden = ["dep:similar", "dep:serde_json"]
 bench = ["dep:criterion"]
 fuzz = ["dep:serde", "dep:serde_json"]
+# Edge-coverage feedback from nightly sancov instrumentation (isolated unsafe, see fuzz::sancov).
+sancov = ["fuzz"]
 suite = ["dep:sha2", "dep:serde", "dep:serde_json", "dep:tpt-testkit-macros"]
 property = ["dep:proptest", "dep:serde_json"]
 # Isolated platform code (thread pinning, cache clearing); the only place unsafe is permitted.

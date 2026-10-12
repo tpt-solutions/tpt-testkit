@@ -8,8 +8,17 @@ tpt-testkit's fuzz support has two layers:
 2. **Malformed-input generator** (`fuzz` feature). Truncations, invalid UTF-8 insertions and
    out-of-bounds length fields for a seed input. Use it on every parser's fixtures.
 
-Coverage-guided fuzzing with sancov edge feedback needs nightly instrumentation and is not
-implemented here.
+3. **Sancov edge feedback** (`sancov` feature, nightly). Use `sancov::trace` inside an engine
+   target so the engine keeps inputs that reach new edges:
+
+   ```rust,ignore
+   engine.run(100_000, |data| sancov::trace(|| my_parser::parse(data)).1);
+   ```
+
+   Build with `RUSTFLAGS="-C passes=sancov-module -C llvm-args=-sanitizer-coverage-level=3
+   -C llvm-args=-sanitizer-coverage-inline-8bit-counters"` and pass an explicit `--target` so
+   build scripts stay uninstrumented. Without the flags, `trace` returns no features. Linux and
+   macOS link; Windows MSVC does not provide the section-bound symbols the instrumentation needs.
 
 ## Harness template
 

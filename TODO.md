@@ -51,7 +51,7 @@ Org: `tpt-solutions` (repository URLs and sibling-crate git deps).
 ### Fuzz (Module C)
 - [x] Harness API (`fuzz_target`-style, 10-line harness) — `fuzz::Engine` plus the template in `docs/fuzz.md`; in-process, no cargo-fuzz wrapper
 - [x] Pure-Rust in-process fuzz engine: mutators, corpus, scheduling — *uniform parent scheduling; feature-driven corpus growth*
-- [ ] Sancov coverage feedback (nightly only for instrumentation; runs on Windows/Linux/macOS)
+- [x] Sancov coverage feedback (nightly only for instrumentation) — `fuzz::sancov` (feature `sancov`); *verified only by the `sancov` CI job on Linux/macOS: MSVC has no `__start___sancov_cntrs`/`__stop___sancov_cntrs` section-bound symbols, so Windows MSVC builds do not link with instrumentation (uninstrumented builds work)*
 - [x] Corpus management and minimization — `read_corpus` / `save_corpus` / `minimize_corpus`
 - [x] Crash artifacts: save, replay, minify to smallest failing input
 - [x] CLI: crash dedup against known issues (stack/signature hashing) — `tpt-testkit-cli crash-dedup`; signatures are over panic messages, not stack hashes
@@ -67,10 +67,10 @@ Org: `tpt-solutions` (repository URLs and sibling-crate git deps).
 - [x] `strategy::malformed_pdf_stream()` — `property::malformed_pdf_stream`
 - [x] Valid + invalid generators for JSON, CSV, PDF
 - [x] Round-trip helper for serialization (tpt-uir, tpt-primitives) — `property::check_round_trip`
-- [ ] `no_std` support utilities: alloc-backed fixtures, host-side emulators — *`nostd::Budget` (fixed-heap emulator) done; no CI check for no_std targets yet, and no real no_std downstream crate to test against*
+- [x] `no_std` support utilities: alloc-backed fixtures, host-side emulators — `nostd::Budget`; the `nostd`-only build is `#![no_std]` and CI checks it on `thumbv7em-none-eabihf` — *no real no_std downstream crate to test against yet*
 - [x] Full docs (rustdoc, examples per module), CHANGELOG — `cargo doc -D warnings` passes; runnable examples in bench, suite, property, fuzz, nostd; golden examples are `ignore` (need fixture files)
 - [ ] Tag and release v1.0.0 (git tag; GitHub release)
 
 ## Ongoing
-- [ ] Keep every output CI-parseable (JSON)
+- [x] Keep every output CI-parseable (JSON) — every CLI command that prints a result supports `--format json`
 - [ ] Verify zero production footprint on each release — *`scripts/check-prod-footprint.sh` passes on the current tree*

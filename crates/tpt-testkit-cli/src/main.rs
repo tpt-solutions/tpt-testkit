@@ -2,12 +2,16 @@
 //!
 //! ```text
 //! tpt-testkit-cli bench-summarize --criterion-dir <dir> --out <summary.json> [--csv <file>]
+//!                 [--format text|json]
 //! tpt-testkit-cli bench-compare --baseline <summary.json> --current <summary.json>
 //!                 [--threshold-pct <n>] [--noise-sigmas <n>] [--format text|markdown|json]
 //!                 [--strict]
 //! tpt-testkit-cli crash-dedup --report <report.json> [--known <signatures.txt>]
 //!                 [--format text|json]
 //! ```
+//!
+//! Every command that prints a result supports `--format json`, and errors go to stderr with a
+//! non-zero exit code, so CI can parse stdout and branch on the exit code.
 //!
 //! Exit codes: `0` success, `1` regression (or missing benchmark with `--strict`; or a crash
 //! group not in `--known` for `crash-dedup`), `2` usage or I/O error.
@@ -25,6 +29,7 @@ use summary::Summary;
 
 const USAGE: &str = "usage:
   tpt-testkit-cli bench-summarize --criterion-dir <dir> --out <summary.json> [--csv <file>]
+                  [--format text|json]
   tpt-testkit-cli bench-compare --baseline <summary.json> --current <summary.json>
                   [--threshold-pct <n>] [--noise-sigmas <n>] [--format text|markdown|json]
                   [--strict]
@@ -61,14 +66,30 @@ fn summarize(args: &[String]) -> Result<ExitCode, String> {
     let entries = summary::collect(&criterion_dir)?;
     let summary = Summary::new(entries);
     write(&out, &summary.to_json())?;
-    println!(
-        "wrote {} benchmarks to {}",
-        summary.benchmarks.len(),
-        out.display()
-    );
-    if let Some(csv) = option(args, "--csv")? {
-        write(Path::new(&csv), &summary.to_csv())?;
-        println!("wrote {csv}");
+    let csv = option(args, "--csv")?;
+    if let Some(csv) = &csv {
+        write(Path::new(csv), &summary.to_csv())?;
+    }
+    match option(args, "--format")?.as_deref().unwrap_or("text") {
+        "text" => {
+            println!(
+                "wrote {} benchmarks to {}",
+                summary.benchmarks.len(),
+                out.display()
+            );
+            if let Some(csv) = &csv {
+                println!("wrote {csv}");
+            }
+        }
+        "json" => println!(
+            "{}",
+            serde_json::json!({
+                "benchmarks": summary.benchmarks.len(),
+                "json": out.display().to_string(),
+                "csv": csv,
+            })
+        ),
+        other => return Err(format!("unknown --format {other:?}")),
     }
     Ok(ExitCode::SUCCESS)
 }
