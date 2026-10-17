@@ -31,3 +31,7 @@ All notable changes to this project are documented here. The format follows
   under `suites/`, plus an ICC manifest (`PRMG_RGB-sRGB_based.icc` and the `Probev2.zip` probe archive).
 - `nostd` feature: `nostd::Budget`, a host-side fixed-heap emulator whose `alloc_vec` fails with
   `OutOfBudget` instead of aborting, for testing `no_std` + `alloc` failure paths.
+
+### Known limitations
+- The PDFBox test-file suite is not included. The `pdfbox-testfiles` repo has no PDF files at
+  master or in any mirror commit, so there is nothing to pin. Deferred until a corpus source exists.

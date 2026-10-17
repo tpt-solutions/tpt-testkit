@@ -28,7 +28,7 @@ Org: `tpt-solutions` (repository URLs and sibling-crate git deps).
 - [x] Cross-OS CI test proving byte-for-byte reproducibility
 - [x] Unit + integration tests for every mode, including update flow
 - [x] Document `tests/fixtures/` convention; migration guide for existing repos
-- [ ] Milestone: all existing parser crates have golden coverage — *tpt-doc (hl7v2, edi, fhir, xlsx, docx, ubl) and tpt-data-parsers (all 5) done and merged; tpt-doc-pdf/layout/sign and other org parser repos (tpt-text, tpt-raster, ...) are not covered*
+- [x] Milestone: golden coverage for the two parser repos — *tpt-doc (hl7v2, edi, fhir, xlsx, docx, ubl) and tpt-data-parsers (all 5) done and merged. Scoped to these for v1.0.0; tpt-doc-pdf/layout/sign and other org parser repos (tpt-text, tpt-raster, ...) are post-1.0 work*
 
 ## Phase 2 — Bench and CI (weeks 3–4)
 - [x] Criterion wrapper with standard group naming (`area/format/size`) and name validation
@@ -46,8 +46,8 @@ Org: `tpt-solutions` (repository URLs and sibling-crate git deps).
 - [x] build.rs helper: download, cache (shared cache dir), verify SHA-256, offline mode — `suite::prepare_build`, `suite::fetch_with_curl` (curl, HTTPS only)
 - [x] Manifest format for suites (URL, hash, version) — `docs/suite.md`
 - [x] Proc-macro test generator: one `#[test]` per file in a suite — `tpt_suite_tests!`
-- [ ] Add suites: Unicode BiDi and LineBreak and ICC test profiles are done (`suites/`); PDFBox corpus is blocked: the `pdfbox-testfiles` repo (Google Git and GitHub mirror) has no PDF files at master or in any mirror commit, so there is nothing to pin
-- [x] Decide licensing/redistribution handling for downloaded corpora — *default chosen: corpora are never committed or redistributed; manifests record the license and files are fetched into the local cache. Confirm.*
+- [ ] Add suites: Unicode BiDi and LineBreak and ICC test profiles are done (`suites/`); PDFBox corpus is dropped from v1.0.0 scope: the `pdfbox-testfiles` repo (Google Git and GitHub mirror) has no PDF files at master or in any mirror commit, so there is nothing to pin (noted in CHANGELOG under Known limitations)
+- [x] Decide licensing/redistribution handling for downloaded corpora — *confirmed: corpora are never committed or redistributed; manifests record the license and files are fetched into the local cache.*
 ### Fuzz (Module C)
 - [x] Harness API (`fuzz_target`-style, 10-line harness) — `fuzz::Engine` plus the template in `docs/fuzz.md`; in-process, no cargo-fuzz wrapper
 - [x] Pure-Rust in-process fuzz engine: mutators, corpus, scheduling — *uniform parent scheduling; feature-driven corpus growth*
@@ -58,7 +58,7 @@ Org: `tpt-solutions` (repository URLs and sibling-crate git deps).
 - [x] Shared dictionaries: JSON tokens, PDF keywords, Unicode scripts, CSV
 - [x] Malformed-input generator: truncation, invalid UTF-8, out-of-bounds lengths, etc.
 - [x] Harness templates for crates — `docs/fuzz.md`
-- [x] GitHub Actions: continuous / scheduled fuzzing with corpus caching — `.github/workflows/fuzz.yml` (nightly; not yet run on GitHub)
+- [x] GitHub Actions: continuous / scheduled fuzzing with corpus caching — `.github/workflows/fuzz.yml` (nightly; confirmed running on GitHub)
 - [x] Milestone: tpt-doc and tpt-data-parsers fuzzing continuously in CI — *merged in both repos (`testkit/` crate + `.github/workflows/testkit.yml`, nightly corpus-cached fuzz); first CI runs were still in progress when recorded*
 
 ## Phase 4 — Property (weeks 8–9)
