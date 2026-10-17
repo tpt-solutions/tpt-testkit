@@ -279,12 +279,23 @@ pub fn prepare_build(manifest_path: &Path) -> Result<Vec<PathBuf>, SuiteError> {
     println!("cargo:rerun-if-changed={}", manifest_path.display());
     println!("cargo:rerun-if-env-changed=TPT_SUITE_OFFLINE");
     println!("cargo:rerun-if-env-changed=TPT_TESTKIT_CACHE");
+    prepare_build_with(manifest_path, &Options::from_env(), fetch_with_curl)
+}
+
+/// [`prepare_build`] with the cache and fetcher supplied by the caller.
+fn prepare_build_with<F>(
+    manifest_path: &Path,
+    options: &Options,
+    fetch: F,
+) -> Result<Vec<PathBuf>, SuiteError>
+where
+    F: Fn(&str) -> Result<Vec<u8>, String>,
+{
     let manifest = Manifest::from_json(&fs::read_to_string(manifest_path)?)?;
-    let options = Options::from_env();
     manifest
         .files
         .iter()
-        .map(|entry| ensure_file(&manifest, &entry.path, &options, fetch_with_curl))
+        .map(|entry| ensure_file(&manifest, &entry.path, options, &fetch))
         .collect()
 }
 
@@ -570,13 +581,20 @@ mod tests {
 
     #[test]
     fn prepare_build_ensures_fixture_from_cache() {
-        let paths = prepare_build(Path::new("tests/fixtures/suite/manifest.json")).unwrap();
-        assert_eq!(paths.len(), 1);
-        assert_eq!(
-            fs::read(&paths[0]).unwrap(),
-            b"hello suite
-"
-        );
+        // Pre-seed a private cache so the test never touches the network or the shared cache.
+        let cache = fresh_cache("fixture");
+        let target = cache.join("fixture/1.0.0/hello.txt");
+        fs::create_dir_all(target.parent().unwrap()).unwrap();
+        fs::write(&target, b"hello suite\n").unwrap();
+
+        let paths = prepare_build_with(
+            Path::new("tests/fixtures/suite/manifest.json"),
+            &options(&cache, true),
+            |url| Err(format!("unexpected fetch of {url}")),
+        )
+        .unwrap();
+        assert_eq!(paths, vec![target]);
+        fs::remove_dir_all(&cache).unwrap();
     }
 
     #[test]

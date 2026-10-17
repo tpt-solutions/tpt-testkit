@@ -119,7 +119,16 @@ mod imp {
 mod imp {
     use super::PinError;
 
-    pub fn pin_current_thread(_core: usize) -> Result<(), PinError> {
+    const MAX_CORES: usize = usize::BITS as usize;
+
+    pub fn pin_current_thread(core: usize) -> Result<(), PinError> {
+        // Range-check first so a bad index is reported the same way on every platform.
+        if core >= MAX_CORES {
+            return Err(PinError::CoreOutOfRange {
+                core,
+                max: MAX_CORES,
+            });
+        }
         Err(PinError::Unsupported)
     }
 }

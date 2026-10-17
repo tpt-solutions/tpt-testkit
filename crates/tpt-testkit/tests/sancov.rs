@@ -3,7 +3,18 @@
 
 #![cfg(feature = "sancov")]
 
+use std::sync::{Mutex, MutexGuard};
+
 use tpt_testkit::fuzz::{Engine, sancov};
+
+/// Edge counters are process-wide, so tests that trace must not overlap: a `reset` from one
+/// test would wipe the counters another test is about to read. The test harness runs tests in
+/// parallel by default, so these tests take this lock first.
+static TRACING: Mutex<()> = Mutex::new(());
+
+fn tracing_guard() -> MutexGuard<'static, ()> {
+    TRACING.lock().unwrap_or_else(|e| e.into_inner())
+}
 
 fn parse(data: &[u8]) {
     if data.first() == Some(&b'A') {
@@ -19,6 +30,7 @@ fn parse(data: &[u8]) {
 
 #[test]
 fn deeper_inputs_exercise_more_edges() {
+    let _guard = tracing_guard();
     let shallow = sancov::trace(|| parse(b"x")).1;
     let deep = sancov::trace(|| parse(b"ABC")).1;
     if sancov::is_instrumented() {
@@ -30,6 +42,7 @@ fn deeper_inputs_exercise_more_edges() {
 
 #[test]
 fn engine_grows_corpus_from_edge_coverage() {
+    let _guard = tracing_guard();
     if !sancov::is_instrumented() {
         eprintln!("not instrumented; skipping coverage-guided assertions");
         return;
