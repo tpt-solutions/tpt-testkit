@@ -2,7 +2,7 @@
 
 Benchmarks use [criterion](https://docs.rs/criterion) through `tpt_testkit::bench`. The
 `tpt-testkit-cli` tool turns criterion's output into summaries and compares them, and CI uses that
-to block regressions on pull requests.
+to block regressions on pull requests..
 
 ## Naming
 
